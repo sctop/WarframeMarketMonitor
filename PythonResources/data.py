@@ -1,7 +1,7 @@
 import requests
 from new_time import format_time
 from time import sleep
-
+import json
 
 def get(itemname):
     # 生成一个请求的链接
@@ -28,3 +28,35 @@ def get(itemname):
         else:
             return req
     return req
+
+
+def cTe(itemname):
+    with open("database.json", 'r', encoding='UTF-8') as file:
+        temp = json.load(file)
+
+    for i in temp:
+        if i["zh"] == itemname:
+            return i["search"]
+
+    return 1
+
+
+def config():
+    try:
+        with open("config.json", "r", encoding="UTF-8") as file:
+            config = json.load(file)
+    except Exception:
+        # 默认配置为开启提醒且每隔10分钟才查询一次
+        default_config = {"sleep_time": 600, "alert": 1, "alert_filepath": "tips.mp3", "last_item": "Unknown"}
+        with open("config.json", "w", encoding="UTF-8") as file:
+            json.dump(default_config, file, indent=4)
+        config = default_config
+    return config
+
+
+def config_update(itemname):
+    with open("config.json", 'r', encoding='UTF-8') as file:
+        temp = json.load(file)
+    temp["last_search"] = itemname
+    with open("config.json", 'w', encoding='UTF-8') as file:
+        json.dump(temp, file)

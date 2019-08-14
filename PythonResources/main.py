@@ -23,43 +23,77 @@ Version 1.0, 2019/08/10
 """
 
 import sys
-from data import get as get_data
+from data import get as get_data, cTe, config, config_update
 from time import sleep
 from new_time import format_time
 from subprocess import call
 from playsound import playsound
-import json
 from process_data import pricing, reputation
+import sys
+
+
+def tips():
+    print("--------------------提示--------------------")
+    print("本程序目前已经支持中文自动转成英文来自动查询")
+    print("中英词库来自玩家云之幻 (Richasy)的个人贡献")
+    print("感谢云之幻在GitHub上免费公开这些的全部内容")
+    print("--------------特殊内容输入提示--------------")
+    print("PRIME物品：[物品名]和 PRIME 之间要有空格")
+    print("例如：“RHINO PRIME”或“犀牛 PRIME”")
+    print("-----------------常用翻译-------------------")
+    print("战甲：")
+    print("set        → 一套")
+    print("neuroptics → 头部神经光元")
+    print("blueprint  → 蓝图")
+    print("chassis    → 机体")
+    print("systems    → 机体")
+    print("虚空遗物类型：")
+    print("lith → 古纪")
+    print("meso → 前纪")
+    print("neo  → 中纪")
+    print("axi  → 后纪")
+    print("虚空遗物优良率：")
+    print("intact      → 完整")
+    print("exceptional → 优良")
+    print("flawless    → 无暇")
+    print("radiant     → 光辉")
+    print("其余内容请自行使用灰机wiki右侧工具栏快速查询翻译\n")
 
 # 读取配置文件
-try:
-    with open("config.json", "r", encoding="UTF-8") as file:
-        config = json.load(file)
-except Exception:
-    # 默认配置为开启提醒且每隔10分钟才查询一次
-    default_config = {"sleep_time": 600, "alert": 1, "alert_filepath": "tips.mp3"}
-    with open("config.json", "w", encoding="UTF-8") as file:
-        json.dump(default_config, file, indent=4)
-    config = default_config
+config = config()
 # 提取配置内容
 __SLEEPTIME__ = int(float(config["sleep_time"]))
 __ALERTSTAT__ = int(float(config["alert"]))
 __ALERTPATH__ = str(config["alert_filepath"])
+__LASTITEM__ = str(config["last_item"])
 
-# 获取物品名称
-itemname = input("输入欲要监控的WM物品名称(英文)：")
-# 小写全部字母，这是WM API的硬性要求
-itemname = str(itemname).lower()
-# 根据空格来分离逐个单词
-temp = itemname.split(" ")
-# 格式化物品名称（每个独立单词的中间都加上“_”）
-itemname = ''
-for i in range(len(temp)):
-    itemname = itemname + temp[i]
-    if i == len(temp) - 1:
-        pass
+# 记忆内容
+if __LASTITEM__ != "Unknown":
+    print("检测上一次您监控了 " + __LASTITEM__)
+    print("您是否需要继续监控？[Y/N]", end='')
+    temp = input()
+    if temp == "Y":
+        itemname = __LASTITEM__
+else:
+    tips()
+    # 获取内容
+    itemname = input("输入欲要监控的WM物品名称(中英文皆可)：")
+    en_name = cTe(itemname)
+    if en_name != 1:
+        itemname = en_name
     else:
-        itemname = itemname + '_'
+        # 小写全部字母，这是WM API的硬性要求
+        itemname = str(itemname).lower()
+        # 根据空格来分离逐个单词
+        temp = itemname.split(" ")
+        # 格式化物品名称（每个独立单词的中间都加上“_”）
+        itemname = ''
+        for i in range(len(temp)):
+            itemname = itemname + temp[i]
+            if i == len(temp) - 1:
+                pass
+            else:
+                itemname = itemname + '_'
 
 # 从服务器获取数据
 req = get_data(itemname)
@@ -68,6 +102,8 @@ if req == 1:
     input()
     sys.exit()
 
+# 正常运行，写入文件
+config_update(itemname)
 # 如果正常运行，那么刷新屏幕并作提示
 call("cls", shell=True)
 print(str(format_time("Asia/Taipei", None)) + ' WM监控程序 - V1.0 By sctop')
@@ -131,13 +167,6 @@ while True:
 
         online = reputation(itemtype, pricing(itemtype, online))
 
-        # 本地化在线状态英文为中文
-        for i in online:
-            if i["status"] == "ingame":
-                i["status"] = "游戏中"
-            elif i["status"] == "online":
-                i["status"] = "在线上"
-
         # 如果有任一卖家在线
         if len(online) != 0:
             print('\n' + str(format_time("Asia/Taipei", None)) + ' 程序监测到有在线的卖家：')
@@ -147,16 +176,19 @@ while True:
             for i in online:
                 # 物品不是mod
                 if itemtype == "normal":
-                    output = output + "第{}号玩家：游戏内昵称：{}，客户端为{}；信誉度为{}，数量为{}，每一个售价{}白金；当前状态：{}".format(
+                    print("第{}号玩家：游戏内昵称：{}，客户端为{}；信誉度为{}，数量为{}，每一个售价{}白金；当前状态：{}".format(
                         str(num), i["name"], i["platform"], str(i["reputation"]), str(i["quantity"]), str(i["price"]),
-                        i["status"]
-                    ) + "\n"
+                        i["status"]), end=''
+                    )
                 # 反之，则是一个mod
                 elif itemtype == "mod":
-                    output = output + "第{}号玩家：游戏内昵称：{}，客户端为{}；信誉度为{}，数量为{}；每一个Mod等级为{}，每一个售价{}白金；当前状态：{}".format(
+                    print("第{}号玩家：游戏内昵称：{}，客户端为{}；信誉度为{}，数量为{}；每一个Mod等级为{}，每一个售价{}白金；当前状态：{}".format(
                         str(num), i["name"], i["platform"], str(i["reputation"]), str(i["quantity"]), str(i["modrank"]),
-                        str(i["price"]), i["status"]
-                    ) + "\n"
+                        str(i["price"]), i["status"]), end=''
+                    )
+                sys.stdout.flush()
+                print("\n", end='')
+                sys.stdout.flush()
                 num += 1
 
             # 输出已经格式化好的内容
