@@ -19,17 +19,16 @@ playsound
 
 Powered by Python with PyCharm
 Edited by sctop
-Version 1.0, 2019/08/10
+Version 1.3, 2019/08/10
 """
 
-import sys
 from data import get as get_data, cTe, config, config_update
 from time import sleep
 from new_time import format_time
 from subprocess import call
 from playsound import playsound
 from process_data import pricing, reputation
-import sys
+import requests, json, sys
 
 
 def tips():
@@ -59,6 +58,24 @@ def tips():
     print("radiant     → 光辉")
     print("其余内容请自行使用灰机wiki右侧工具栏快速查询翻译\n")
 
+
+def update_database():
+    req = requests.get("https://raw.githubusercontent.com/Richasy/WFA_Lexicon/master/WF_Sale.json")
+    if req.status_code != 200:
+        print("更新失败")
+        return 1
+    req = req.json()
+    with open("database.json", 'r', encoding='UTF-8') as file:
+        content = json.load(file)
+    if content != req:
+        with open("database.json", 'w', encoding='UTF-8') as file:
+            json.dump(req, file)
+    print("更新成功")
+
+
+print("正更新字典内容中......")
+update_database()
+call("cls", shell=True)
 # 读取配置文件
 config = config()
 # 提取配置内容
@@ -106,7 +123,7 @@ if req == 1:
 config_update(itemname)
 # 如果正常运行，那么刷新屏幕并作提示
 call("cls", shell=True)
-print(str(format_time("Asia/Taipei", None)) + ' WM监控程序 - V1.0 By sctop')
+print(str(format_time("Asia/Taipei", None)) + ' WM监控程序 - V1.3 By sctop')
 print(str(format_time("Asia/Taipei", None)) + ' 程序进入主循环。')
 print(str(format_time("Asia/Taipei", None)) + ' 设定的欲监测物品名称：' + str(itemname) + '\n')
 
