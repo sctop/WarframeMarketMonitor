@@ -1,5 +1,5 @@
 import requests
-from time2 import format_time
+from new_time import format_time
 from time import sleep
 
 

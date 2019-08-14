@@ -25,10 +25,11 @@ Version 1.0, 2019/08/10
 import sys
 from data import get as get_data
 from time import sleep
-from time2 import format_time
+from new_time import format_time
 from subprocess import call
 from playsound import playsound
 import json
+from process_data import pricing, reputation
 
 # 读取配置文件
 try:
@@ -73,7 +74,9 @@ print(str(format_time("Asia/Taipei", None)) + ' WM监控程序 - V1.0 By sctop')
 print(str(format_time("Asia/Taipei", None)) + ' 程序进入主循环。')
 print(str(format_time("Asia/Taipei", None)) + ' 设定的欲监测物品名称：' + str(itemname) + '\n')
 
+# 默认非Mod
 itemtype = "normal"
+
 # 主循环
 while True:
     # 如果请求没有问题
@@ -97,7 +100,7 @@ while True:
                 temp = {}
                 temp["platform"] = i["platform"]
                 temp["region"] = i["region"]
-                temp["price"] = i["platinum"]
+                temp["price"] = int(i["platinum"])
                 temp["quantity"] = i["quantity"]
                 temp["name"] = i["user"]["ingame_name"]
                 temp["reputation"] = i["user"]["reputation"]
@@ -126,6 +129,8 @@ while True:
             # 覆盖online为排序后的列表
             online = final
 
+        online = reputation(itemtype, pricing(itemtype, online))
+
         # 本地化在线状态英文为中文
         for i in online:
             if i["status"] == "ingame":
@@ -153,6 +158,7 @@ while True:
                         str(i["price"]), i["status"]
                     ) + "\n"
                 num += 1
+
             # 输出已经格式化好的内容
             print(output)
 
