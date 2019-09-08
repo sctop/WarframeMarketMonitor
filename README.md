@@ -7,9 +7,9 @@
 感谢GitHub用户[Richasy(云之幻)](https://github.com/Richasy)提供的[中英对照数据](https://github.com/Richasy/WFA_Lexicon)，如果没有这份数据的存在本程序的中英转换功能就不复存在。大家可以去项目页面star或者follow一下他本人呢！
 
 ## 下载
-如果您的电脑上安装了Python 3或更高版本，则请在[此处下载](PythonResources.zip)
+如果您的电脑上安装了Python 3或更高版本，则请在[此处下载](Package/PythonResources.zip)
 
-如果您是普通用户，或不确定是否拥有Python，请在[此处下载](WindowsVersion.zip)
+如果您是普通用户，或不确定是否拥有Python，请在[此处下载](Package/WindowsVersion.zip)
 
 ## 程序工作原理
 本程序定期向WarframeMarket的API域名发出请求，并将请求的内容处理最后输出为人类可读与理解的内容到命令行窗口内。如果有卖家，则发出提示音提示用户。
