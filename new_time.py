@@ -1,4 +1,5 @@
 import pytz, datetime
+from time import sleep
 
 
 def format_time(tz, mode):

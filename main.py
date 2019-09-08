@@ -19,16 +19,17 @@ playsound
 
 Powered by Python with PyCharm
 Edited by sctop
-Version 1.4, 2019/09/07
+Version 1.5, 2019/09/08
 """
-
-from data import get as get_data, config, config_update, get_input, get_name, format_number, adding_space, max_length
-from time import sleep
-from new_time import format_time
+# 外置模块
+from data import get_data, get_name, Config, GetInput, Standardize
+from new_time import format_time, sleep
+from process_data import Sorting
+import cursor
+# 内置模块
 from subprocess import call
 from playsound import playsound
-from process_data import pricing, reputation
-import requests, json, sys, cursor
+import requests, json, sys
 
 
 def update_database():
@@ -49,7 +50,7 @@ print("正更新字典内容中......")
 update_database()
 call("cls", shell=True)
 # 读取配置文件
-config = config()
+config = Config().get()
 # 提取配置内容
 __SLEEPTIME__ = int(float(config["sleep_time"]))
 __ALERTSTAT__ = int(float(config["alert"]))
@@ -70,9 +71,9 @@ if __LASTITEM__ != "Unknown":
         itemname = __LASTITEM__
     else:
         call("cls", shell=True)
-        itemname = get_input()
+        itemname = GetInput().get_input()
 else:
-    itemname = get_input()
+    itemname = GetInput().get_input()
 
 # 从服务器获取数据
 req = get_data(itemname)
@@ -82,7 +83,7 @@ if req == 1:
     sys.exit()
 
 # 正常运行，写入文件
-config_update(itemname)
+Config().config_update(itemname)
 
 # 默认非Mod
 itemtype = "normal"
@@ -91,7 +92,7 @@ itemtype = "normal"
 while True:
     # 如果正常运行，那么刷新屏幕并作提示
     call("cls", shell=True)
-    print(str(format_time("Asia/Taipei", None)) + ' WM监控程序 - V1.4 By sctop')
+    print(str(format_time("Asia/Taipei", None)) + ' WM监控程序 - V1.5 By sctop')
     print(str(format_time("Asia/Taipei", None)) + ' 程序进入主循环。')
     en_name = get_name("sTe", itemname)
     cn_name = get_name("eTc", en_name)
@@ -148,46 +149,47 @@ while True:
             online = final
 
         # 筛选
-        online = reputation(itemtype, pricing(itemtype, online))
+        online = Sorting().reputation(itemtype, Sorting().pricing(itemtype, online))
 
         # 如果有任一卖家在线
         if len(online) != 0:
             print('\n' + str(format_time("Asia/Taipei", None)) + ' 程序监测到有在线的卖家：')
             output = ''
             num = 1
+            Standard = Standardize()
 
             # 最大值，用于优化UI
             max_number_length = len(str(len(online)))
-            max_name_length = max_length(online, "name")
-            max_reputation_length = max_length(online, "reputation")
-            max_quantity_length = max_length(online, "quantity")
-            max_price_length = max_length(online, "price")
+            max_name_length = Standard.max_length(online, "name")
+            max_reputation_length = Standard.max_length(online, "reputation")
+            max_quantity_length = Standard.max_length(online, "quantity")
+            max_price_length = Standard.max_length(online, "price")
             if itemtype == "mod":
-                max_rank_length = max_length(online, "modrank")
+                max_rank_length = Standard.max_length(online, "modrank")
 
             # 一个接一个地输出信息
             for i in online:
                 # 物品不是mod
                 if itemtype == "normal":
                     print("第{}号玩家: 游戏内昵称:{},客户端为{};信誉度为{},数量为{},每一个售价{}白金  当前状态:{}".format(
-                        str(format_number(num, max_number_length)),
-                        i["name"] + adding_space(i["name"], max_name_length),
+                        str(Standard.format_number(num, max_number_length)),
+                        i["name"] + Standard.adding_space(i["name"], max_name_length),
                         i["platform"],
-                        str(i["reputation"]) + adding_space(str(i["reputation"]), max_reputation_length),
-                        str(i["quantity"]) + adding_space(str(i["quantity"]), max_quantity_length),
-                        str(i["price"]) + adding_space(str(i["price"]), max_price_length),
+                        str(i["reputation"]) + Standard.adding_space(str(i["reputation"]), max_reputation_length),
+                        str(i["quantity"]) + Standard.adding_space(str(i["quantity"]), max_quantity_length),
+                        str(i["price"]) + Standard.adding_space(str(i["price"]), max_price_length),
                         i["status"]), end=''
                     )
                 # 反之，则是一个mod
                 elif itemtype == "mod":
                     print("第{}号玩家: 游戏内昵称:{},客户端为{};信誉度为{},数量为{};每一个Mod等级为{},每一个售价{}白金  当前状态：{}".format(
-                        str(format_number(num, max_number_length)),
-                        i["name"] + adding_space(i["name"], max_name_length),
+                        str(Standard.format_number(num, max_number_length)),
+                        i["name"] + Standard.adding_space(i["name"], max_name_length),
                         i["platform"],
-                        str(i["reputation"]) + adding_space(str(i["reputation"]), max_reputation_length),
-                        str(i["quantity"]) + adding_space(str(i["quantity"]), max_quantity_length),
-                        str(i["modrank"]) + adding_space(str(i["modrank"]), max_rank_length),
-                        str(i["price"]) + adding_space(str(i["price"]), max_price_length),
+                        str(i["reputation"]) + Standard.adding_space(str(i["reputation"]), max_reputation_length),
+                        str(i["quantity"]) + Standard.adding_space(str(i["quantity"]), max_quantity_length),
+                        str(i["modrank"]) + Standard.adding_space(str(i["modrank"]), max_rank_length),
+                        str(i["price"]) + Standard.adding_space(str(i["price"]), max_price_length),
                         i["status"]), end=''
                     )
                 sys.stdout.flush()
