@@ -33,10 +33,13 @@ import requests, json, sys
 
 
 def update_database():
-    req = requests.get("https://raw.githubusercontent.com/Richasy/WFA_Lexicon/master/WF_Sale.json")
-    if req.status_code != 200:
-        print("更新失败")
+    try:
+        req = requests.get("https://raw.githubusercontent.com/Richasy/WFA_Lexicon/master/WF_Sale.json")
+    except Exception:
         return 1
+    else:
+        if req.status_code != 200:
+            return 1
     req = req.json()
     with open("database.json", 'r', encoding='UTF-8') as file:
         content = json.load(file)
@@ -44,10 +47,15 @@ def update_database():
         with open("database.json", 'w', encoding='UTF-8') as file:
             json.dump(req, file)
     print("更新成功")
+    return 0
 
 
+# 主程序
 print("正更新字典内容中......")
-update_database()
+status = update_database()
+if status == 1:
+    print("更新失败")
+    input("按回车键继续或直接退出")
 call("cls", shell=True)
 # 读取配置文件
 config = Config().get()
@@ -56,6 +64,11 @@ __SLEEPTIME__ = int(float(config["sleep_time"]))
 __ALERTSTAT__ = int(float(config["alert"]))
 __ALERTPATH__ = str(config["alert_filepath"])
 __LASTITEM__ = str(config["last_item"])
+status_cn = {
+    "offline": "离线",
+    "online": "在线",
+    "ingame": "在游戏中"
+}
 
 # 记忆内容
 if __LASTITEM__ != "Unknown":
@@ -178,7 +191,7 @@ while True:
                         str(i["reputation"]) + Standard.adding_space(str(i["reputation"]), max_reputation_length),
                         str(i["quantity"]) + Standard.adding_space(str(i["quantity"]), max_quantity_length),
                         str(i["price"]) + Standard.adding_space(str(i["price"]), max_price_length),
-                        i["status"]), end=''
+                        status_cn[i["status"]]), end=''
                     )
                 # 反之，则是一个mod
                 elif itemtype == "mod":
@@ -190,7 +203,7 @@ while True:
                         str(i["quantity"]) + Standard.adding_space(str(i["quantity"]), max_quantity_length),
                         str(i["modrank"]) + Standard.adding_space(str(i["modrank"]), max_rank_length),
                         str(i["price"]) + Standard.adding_space(str(i["price"]), max_price_length),
-                        i["status"]), end=''
+                        status_cn[i["status"]]), end=''
                     )
                 sys.stdout.flush()
                 print("\n", end='')
